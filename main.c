@@ -20,21 +20,6 @@ typedef struct {
     int numero;
 } Animal;
 
-typedef struct jogo_loteria jogo_loteria;
-
-struct jogo_roleta_acerta_cor {
-    jogo jogo;
-    char cor[50];
-};
-
-typedef struct jogo_roleta_acerta_cor jogo_roleta_acerta_cor;
-
-struct Aposta {
-    jogo jogo;
-    float valor_aposta;
-};
-
-typedef struct Aposta aposta;
 
 struct apostador {
     char nome[50];
@@ -43,13 +28,6 @@ struct apostador {
 };
 
 typedef struct apostador apostador;
-
-struct historico_aposta {
-    aposta aposta;
-    apostador apostador;
-};
-
-typedef struct historico_aposta historico_aposta;
 
 void inicializarAnimais(Animal animais[]) {
     const char *nomes[] = {
@@ -66,75 +44,7 @@ void inicializarAnimais(Animal animais[]) {
     }
 }
 
-void jogarJogoDoBixo() {
-    system("cls");
-    apostador apostadores[10];
-    if (apostadores[apostador_atual - 1].nome[0] == '\0') {
-        printf("Nenhum apostador atual.\n");
-        return;
-    }
-    Animal animais[NUM_ANIMAIS];
-    jogo jogos[2];
-    strcpy(jogos[0].nome, "Jogo do Bixo");
-    jogos[0].valor_minimo_aposta = 100.0;
-    jogos[0].premio_total = 10000.0;
-    inicializarAnimais(animais);
-
-    char nome_apostador_atual[50];
-    strcpy(nome_apostador_atual, apostadores[apostador_atual].nome);
-
-    srand(time(NULL));
-    int numeroSorteado = rand() % NUM_ANIMAIS + 1;
-
-    printf("Digite o numero do animal que voce quer apostar (1 a 25): ");
-    int numeroApostado;
-    scanf("%d", &numeroApostado);
-    printf("Digite quanto voce quer apostar: ");
-    float valorApostado;
-    scanf("%f", &valorApostado);
-    if (valorApostado < jogos[0].valor_minimo_aposta) {
-        printf("O valor minimo da aposta eh de %.2f\n", jogos[0].valor_minimo_aposta);
-        return;
-    }
-    int premio_acumulado = jogos[0].premio_total *= valorApostado;
-
-    printf("Animal sorteado: %s (Numero %d)\n", animais[numeroSorteado - 1].nome, numeroSorteado);
-
-    if (numeroApostado == numeroSorteado) {
-        printf("Parabens! Voce ganhou!\n");
-        apostadores[apostador_atual].saldo += premio_acumulado;
-        FILE *file = fopen("historico_aposta.txt", "a");
-        if (file == NULL) {
-            printf("Erro ao abrir o arquivo informacoes_apostadores.txt\n");
-        } else {
-            fprintf(file, "Apostador: %s\n", nome_apostador_atual);
-            fprintf(file, "Jogo: %s\n", jogos[0].nome);
-            fprintf(file, "Animal apostado: %s\n", animais[numeroApostado - 1].nome);
-            fprintf(file, "Animal sorteado: %s\n", animais[numeroSorteado - 1].nome);
-            fprintf(file, "Valor apostado: %.2f\n", valorApostado);
-            fprintf(file, "Premio acumulado: %.2f\n", premio_acumulado);
-            fprintf(file, "Saldo atual: %.2f\n", apostadores[apostador_atual].saldo);
-            fprintf(file, "\n");
-            fclose(file);
-            printf("Informações salvas com sucesso no arquivo historico_aposta.txt\n");
-        }
-    } else {
-        printf("Que pena! Voce perdeu. Tente novamente.\n");
-    }
-}
-
-
-void listar_jogos_disponiveis() {
-    system("cls");
-    jogo jogos[2];
-    strcpy(jogos[0].nome, "Jogo do Bixo");
-    jogos[0].valor_minimo_aposta = 100.0;
-    jogos[0].premio_total = 10000.0;
-
-    strcpy(jogos[1].nome, "Roleta Acerta Cor");
-    jogos[1].valor_minimo_aposta = 300.0;
-    jogos[1].premio_total = 30000.0;
-
+void listar_jogos_disponiveis(jogo jogos[]) {
     for (int i = 0; i < 2; i++) {
         printf("Jogo: %s\n", jogos[i].nome);
         printf("Valor minimo da aposta: %.2f\n", jogos[i].valor_minimo_aposta);
@@ -146,16 +56,14 @@ void listar_jogos_disponiveis() {
     getchar(); // Captura o Enter que ficou no buffer do scanf
 }
 
-void cadastrarUsuario() {
-    system("cls");
-    apostador apostadores[10];
+void cadastrarUsuario(apostador apostadores[]) {
     float valor_depositado = 0;
     int idade = 0;
     if (apostador_atual == 10) {
         printf("O numero maximo de apostadores foi atingido!\n");
         continua = 0;
     }
-    printf("Bem-vindo ao cadastro do apostador,por favor siga s instrucoes abaixo:\n");
+    printf("Bem-vindo ao cadastro do apostador,por favor siga as instrucoes abaixo:\n");
 
     printf("digite somente o seu primeiro nome:\n");
     scanf("%s", apostadores[apostador_atual].nome);
@@ -173,8 +81,7 @@ void cadastrarUsuario() {
     scanf("%f", &valor_depositado);
     if (valor_depositado < 50.0) {
         printf("O deposito minimo eh de 50 reais,por favor deposite um valor valido:\n");
-        scanf("%f", &valor_depositado);
-        apostadores[apostador_atual].saldo = valor_depositado;
+        continua = 0;
     } else {
         apostadores[apostador_atual].saldo = valor_depositado;
     }
@@ -192,6 +99,124 @@ void cadastrarUsuario() {
     apostador_atual++;
     getchar();
     getchar();
+}
+
+void jogarJogoDoBixo(apostador apostadores[], jogo jogos[]) {
+    if (apostador_atual == 0 || apostadores[apostador_atual - 1].nome[0] == '\0') {
+        printf("Nenhum apostador atual.\n");
+        return;
+    }
+    printf("Bem vindo %s\n", apostadores[apostador_atual - 1].nome);
+    Animal animais[NUM_ANIMAIS];
+
+    inicializarAnimais(animais);
+
+    srand(time(NULL));
+    int numeroSorteado = rand() % NUM_ANIMAIS + 1;
+
+    printf("Digite o numero do animal que voce quer apostar (1 a 25): ");
+    int numeroApostado;
+    scanf("%d", &numeroApostado);
+    if (numeroApostado < 1 || numeroApostado > 25) {
+        printf("Numero invalido. Tente novamente.\n");
+        return;
+    }
+    printf("Digite quanto voce quer apostar: ");
+    float valorApostado;
+    scanf("%f", &valorApostado);
+    if (valorApostado < jogos[0].valor_minimo_aposta) {
+        printf("O valor minimo da aposta eh de %.2f\n", jogos[0].valor_minimo_aposta);
+        continua = 0;
+    }
+    if (valorApostado > apostadores[apostador_atual - 1].saldo) {
+        printf("Saldo insuficiente. Seu saldo eh de %.2f\n", apostadores[apostador_atual - 1].saldo);
+        continua = 0;
+    }
+    float premio_acumulado = jogos[0].premio_total *= valorApostado;
+
+    printf("Animal sorteado: %s (Numero %d)\n", animais[numeroSorteado - 1].nome, numeroSorteado);
+
+    FILE *file = fopen("historico_aposta.txt", "a");
+    if (numeroApostado == numeroSorteado) {
+        printf("Parabens! Voce ganhou!\n");
+        if (file == NULL) {
+            printf("Erro ao abrir o arquivo informacoes_apostadores.txt\n");
+        } else {
+            fprintf(file, "Apostador: %s\n", apostadores[apostador_atual - 1].nome);
+            fprintf(file, "Jogo: %s\n", jogos[0].nome);
+            fprintf(file, "Animal apostado: %s\n", animais[numeroApostado - 1].nome);
+            fprintf(file, "Animal sorteado: %s\n", animais[numeroSorteado - 1].nome);
+            fprintf(file, "Valor apostado: %.2f\n", valorApostado);
+            fprintf(file, "Premio acumulado: %.2f\n", premio_acumulado);
+            fprintf(file, "Saldo atual: %.2f\n", apostadores[apostador_atual - 1].saldo += premio_acumulado);
+            fprintf(file, "\n");
+            fclose(file);
+        }
+    } else {
+        printf("Que pena! Voce perdeu. Tente novamente.\n");
+        fprintf(file, "Apostador: %s\n", apostadores[apostador_atual - 1].nome);
+        fprintf(file, "Jogo: %s\n", jogos[0].nome);
+        fprintf(file, "Animal apostado: %s\n", animais[numeroApostado - 1].nome);
+        fprintf(file, "Animal sorteado: %s\n", animais[numeroSorteado - 1].nome);
+        fprintf(file, "Valor apostado: %.2f\n", valorApostado);
+        fprintf(file, "Premio acumulado: %.2f\n", premio_acumulado);
+        fprintf(file, "Saldo atual: %.2f\n", apostadores[apostador_atual - 1].saldo -= valorApostado);
+        fprintf(file, "\n");
+        fclose(file);
+    }
+    printf("Pressione Enter para voltar ao menu...");
+    getchar(); // Espera o usuário pressionar Enter
+    getchar(); // Captura o Enter que ficou no buffer do scanf
+}
+
+void jogo_das_cores(apostador apostadores[], jogo jogos[]) {
+
+    if (apostador_atual == 0 || apostadores[apostador_atual - 1].nome[0] == '\0') {
+        printf("Nenhum apostador atual.\n");
+        return;
+    }
+    printf("Bem vindo ao jogo das cores %s\n", apostadores[apostador_atual - 1].nome);
+    printf("Voce tem apenas uma chance de acertar a cor unica que completara os 3 slotes!\n");
+
+    const char *cores[] = {"vermelho", "azul", "verde"};
+    printf("escolha umas das cores seguintes(Vermleho,verde,azul): \n");
+    char cor_escolhida[10];
+    scanf("%s", cor_escolhida);
+    if (strcmp(cor_escolhida, cores[0]) == 0) {
+        printf("Voce escolheu a cor vermelha\n");
+    } else if (strcmp(cor_escolhida, cores[1]) == 0) {
+        printf("Voce escolheu a cor azul\n");
+    } else if (strcmp(cor_escolhida, cores[2]) == 0) {
+        printf("Voce escolheu a cor verde\n");
+    } else {
+        printf("Cor invalida. Tente novamente.\n");
+        return;
+    }
+
+    printf("Atencao se o resultado for 0 0 0 sera vermelho,1 1 1 sera azul e 2 2 2 sera verde\n");
+
+    srand(time(NULL));
+    int vet_verm[3] = {0, 0, 0};
+    int vet_azul[3] = {1, 1, 1};
+    int vet_verde[3] = {2, 2, 2};
+    int roleta[3] = {rand() % 3, rand() % 3, rand() % 3};
+    if (roleta[0] == 0 && roleta[1] == 0 && roleta[2] == 0 && strcmp(cor_escolhida, cores[0]) == 0) {
+        printf("Voce ganhou\n");
+    } else if (roleta[0] == 1 && roleta[1] == 1 && roleta[2] == 1 && strcmp(cor_escolhida, cores[1]) == 0) {
+        printf("Voce ganhou\n");
+    } else if (roleta[0] == 2 && roleta[1] == 2 && roleta[2] == 2 && strcmp(cor_escolhida, cores[2]) == 0) {
+        printf("Voce ganhou\n");
+    } else {
+        printf("Voce perdeu\n");
+        printf("A cor sorteada foi: \n");
+
+        for (int i = 0; i < 3; i++) {
+            printf("%d\n", roleta[i]);
+        }
+    }
+    printf("Pressione Enter para voltar ao menu...");
+    getchar(); // Espera o usuário pressionar Enter
+    getchar(); // Captura o Enter que ficou no buffer do scanf
 }
 
 void verificarSaldo() {
@@ -224,22 +249,18 @@ void verificarSaldo() {
     getchar(); // Captura o Enter que ficou no buffer do scanf
 }
 
-void jogoDoBixo() {
-}
-
-void jogarAposta() {
+void jogarAposta(apostador apostadores[], jogo jogos[]) {
     printf("Digite 1 para jogar no Jogo do Bixo\n");
-    printf("Digite 2 para jogar na Loteria\n");
-    printf("Digite 3 para jogar na Roleta Acerta Cor\n");
-    printf("Digite 4 para voltar ao menu\n");
+    printf("Digite 2 para jogar na Roleta Acerta Cor\n");
+    printf("Digite 3 para voltar ao menu\n");
     int opcao;
     scanf("%d", &opcao);
     switch (opcao) {
         case 1:
-            jogarJogoDoBixo();
+            jogarJogoDoBixo(apostadores, jogos);
             break;
         case 2:
-            // Função para jogar na Loteria
+            jogo_das_cores(apostadores, jogos);
             break;
         case 3:
 
@@ -253,6 +274,18 @@ void jogarAposta() {
 }
 
 int main(void) {
+    remove("historico_aposta.txt");
+    remove("informacoes_apostadores.txt");
+    apostador apostadores[10];
+    jogo jogos[2];
+    strcpy(jogos[0].nome, "Jogo do Bixo");
+    jogos[0].valor_minimo_aposta = 100.0;
+    jogos[0].premio_total = 10000.0;
+
+    strcpy(jogos[1].nome, "Roleta Acerta Cor");
+    jogos[1].valor_minimo_aposta = 300.0;
+    jogos[1].premio_total = 30000.0;
+
     while (continua) {
         int opcao;
         printf("Menu:\n");
@@ -261,25 +294,24 @@ int main(void) {
         printf("3. Jogar aposta\n");
         printf("4. verificar saldo\n");
         printf("5. ver historico de apostas\n");
-
-        printf("4. Sair\n");
+        printf("6. Sair\n");
         printf("Escolha uma opcao: ");
         scanf("%d", &opcao);
 
         switch (opcao) {
             case 1:
-                listar_jogos_disponiveis();
+                listar_jogos_disponiveis(jogos);
                 break;
             case 2:
-                cadastrarUsuario();
+                cadastrarUsuario(apostadores);
                 break;
             case 3:
-                jogarAposta();
+                jogarAposta(apostadores, jogos);
                 break;
             case 4:
                 verificarSaldo();
                 break;
-            case 5:
+            case 6:
                 continua = 0;
                 break;
             default:
