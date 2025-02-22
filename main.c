@@ -31,6 +31,75 @@ struct apostador {
 
 typedef struct apostador apostador;
 
+
+void listar_jogos_disponiveis(jogo jogos[]);
+void cadastrarUsuario(apostador apostadores[]);
+void jogarAposta(apostador apostadores[], jogo jogos[]);
+void inicializarAnimais(Animal animais[]);
+void jogarJogoDoBixo(apostador apostadores[], jogo jogos[]);
+void jogo_das_cores(apostador apostadores[], jogo jogos[]);
+void verificarSaldo();
+void historicoApostas();
+void adicionarSaldo(apostador apostadores[]);
+
+
+int main(void) {
+    //apaga arquivos antigos
+    remove("historico_aposta.txt");
+    remove("informacoes_apostadores.txt");
+    apostador apostadores[10];
+    jogo jogos[2];
+    //inicializar jogo do bixo
+    strcpy(jogos[0].nome, "Jogo do Bixo");
+    jogos[0].valor_minimo_aposta = 100.0;
+    jogos[0].premio_total = 10000.0;
+    //inicializar roleta acerta cor
+    strcpy(jogos[1].nome, "Roleta Acerta Cor");
+    jogos[1].valor_minimo_aposta = 300.0;
+    jogos[1].premio_total = 30000.0;
+
+    //menu com as opções
+    while (continua) {
+        int opcao;
+        printf("Menu:\n");
+        printf("1. Listar os jogos disponiveis\n");
+        printf("2. Cadastrar usuario\n");
+        printf("3. Jogar aposta\n");
+        printf("4. Verificar saldo\n");
+        printf("5. Ver historico de apostas\n");
+        printf("6. Adicionar saldo\n");
+        printf("7. Sair\n");
+        printf("Escolha uma opcao: ");
+        scanf("%d", &opcao);
+
+        switch (opcao) {
+            case 1:
+                listar_jogos_disponiveis(jogos);
+                break;
+            case 2:
+                cadastrarUsuario(apostadores);
+                break;
+            case 3:
+                jogarAposta(apostadores, jogos);
+                break;
+            case 4:
+                verificarSaldo();
+                break;
+            case 5:
+                historicoApostas();
+                break;
+            case 6:
+                adicionarSaldo(apostadores);
+                break;
+            case 7:
+                continua = 0;
+                break;
+            default:
+                printf("Opcao invalida. Tente novamente.\n");
+        }
+    }
+}
+
 //inicializar array com os 25 animais e seus números correspondentes
 void inicializarAnimais(Animal animais[]) {
     const char *nomes[] = {
@@ -111,6 +180,7 @@ void cadastrarUsuario(apostador apostadores[]) {
 
 //jogar jogo do bixo
 void jogarJogoDoBixo(apostador apostadores[], jogo jogos[]) {
+
     if (apostador_atual == 0 || apostadores[apostador_atual - 1].nome[0] == '\0') { //verificar se existem apostadores
         printf("Nenhum apostador atual.\n");
         return;
@@ -428,57 +498,41 @@ void jogarAposta(apostador apostadores[], jogo jogos[]) {
     }
 }
 
-int main(void) {
-    //apaga arquivos antigos
-    remove("historico_aposta.txt");
-    remove("informacoes_apostadores.txt");
-    apostador apostadores[10];
-    jogo jogos[2];
-    //inicializar jogo do bixo
-    strcpy(jogos[0].nome, "Jogo do Bixo");
-    jogos[0].valor_minimo_aposta = 100.0;
-    jogos[0].premio_total = 10000.0;
-    //inicializar roleta acerta cor
-    strcpy(jogos[1].nome, "Roleta Acerta Cor");
-    jogos[1].valor_minimo_aposta = 300.0;
-    jogos[1].premio_total = 30000.0;
+// verificar histórico de apostas
 
-    //menu com as opções
-    while (continua) {
-        int opcao;
-        printf("Menu:\n");
-        printf("1. Listar os jogos disponiveis\n");
-        printf("2. Cadastrar usuario\n");
-        printf("3. Jogar aposta\n");
-        printf("4. Verificar saldo\n");
-        printf("5. Ver historico de apostas\n");
-        printf("6. Adicionar saldo\n");
-        printf("7. Sair\n");
-        printf("Escolha uma opcao: ");
-        scanf("%d", &opcao);
+void historicoApostas() {
+    char nomeJogador[50];
+    FILE *file = fopen("historico_aposta.txt", "r"); // abrir aqruivo de historico
+    
+    if (file == NULL) {  // se naõ ha historico de apostas
+        printf("Não há historico de apostas!\n");
+        return;
+    }
 
-        switch (opcao) {
-            case 1:
-                listar_jogos_disponiveis(jogos);
-                break;
-            case 2:
-                cadastrarUsuario(apostadores);
-                break;
-            case 3:
-                jogarAposta(apostadores, jogos);
-                break;
-            //falta case 5 - ver histórico de apostas  
-            case 4:
-                verificarSaldo();
-                break;
-            case 6:
-                adicionarSaldo(apostadores);
-                break;
-            case 7:
-                continua = 0;
-                break;
-            default:
-                printf("Opcao invalida. Tente novamente.\n");
+    printf("Digite o nome do jogador: ");
+    fgets(nomeJogador, sizeof(nomeJogador), stdin);
+    nomeJogador[strcspn(nomeJogador, "\n")] = 0;  // Remove o caractere de nova linha, se presente
+
+    char linha[200];
+    int encontrouApostas = 0;
+
+    printf("\nHistórico de apostas de %s:\n\n", nomeJogador);
+
+    // Ler e verificar cada linha do arquivo
+    while (fgets(linha, sizeof(linha), file) != NULL) {
+        // Verificar se o nome do jogador aparece no início da linha
+        if (strncmp(linha, nomeJogador, strlen(nomeJogador)) == 0) {
+            printf("%s", linha);
+            encontrouApostas = 1;
         }
     }
+
+    if (!encontrouApostas) {
+        printf("Nenhuma aposta encontrada para o jogador %s.\n", nomeJogador);
+    }
+
+    fclose(file);
+    printf("\nPressione Enter para voltar ao menu...");
+    getchar(); // Espera o usuário pressionar Enter
+    getchar(); // Captura o Enter que ficou no buffer do scanf
 }
