@@ -340,6 +340,69 @@ void verificarSaldo() {
     getchar(); // Captura o Enter que ficou no buffer do scanf
 }
 
+//adicionar saldo ao apoostador
+void adicionarSaldo(apostador apostadores[]) {
+    char nome[50];
+    float saldo, valor_adicionado;
+    int found = 0;      //verificar se encontrou o usuário ou não
+    
+    printf("Infome o nome do apostador: ");
+    scanf("%s", nome);
+    
+    //ler arquivo informacoes_apostadores
+    FILE *file = fopen("informacoes_apostadores.txt", "r");
+    if (file == NULL) {
+        printf("Arquivo ainda não foi criado.\n");
+        return;
+    }
+    
+    //criar arquivo temporário para adicionar as informações
+    FILE *tempFile = fopen("temp.txt", "w");
+    if (tempFile == NULL) {
+        printf("Erro ao criar arquivo temporário.\n");
+        fclose(file);
+        return;
+    }
+    
+    char nome_lido[50];
+    int idade;
+    while (fscanf(file, "Nome: %s\n", nome_lido) != EOF) {
+        fscanf(file, "Idade: %d\n", &idade);
+        fscanf(file, "Saldo: %f\n", &saldo);
+
+        //verificar se o nome é o mesmo do lido
+        if (strcmp(nome, nome_lido) == 0) {
+            found = 1;  //atualizar encontrado pra 1
+            printf("Saldo atual: %.2f\n", saldo);
+            printf("Digite o valor que deseja adicionar: ");
+            scanf("%f", &valor_adicionado);
+            
+            //verificar se o valor adicionado é maior que 0
+            if (valor_adicionado <= 0) {
+                printf("O valor deve ser maior que zero.\n");
+            } else {
+                saldo += valor_adicionado;
+                printf("Novo saldo: %.2f\n", saldo);
+            }
+        }
+        //escrever novas informações no arquivo temporário
+        fprintf(tempFile, "Nome: %s\nIdade: %d\nSaldo: %.2f\n\n", nome_lido, idade, saldo);
+    }
+
+    fclose(file);
+    fclose(tempFile);
+    
+    //remover o arquivo antigo e renomear o temporário
+    remove("informacoes_apostadores.txt");
+    rename("temp.txt", "informacoes_apostadores.txt");
+
+    //se não tiver encontrado, avisar
+    if (!found) {
+        printf("Apostador não encontrado.\n");
+        return;
+    }
+}
+
 //jogar aposta, escolher um dos jogos ou voltar ao menu
 void jogarAposta(apostador apostadores[], jogo jogos[]) {
     printf("Digite 1 para jogar no Jogo do Bixo\n");
@@ -389,7 +452,8 @@ int main(void) {
         printf("3. Jogar aposta\n");
         printf("4. Verificar saldo\n");
         printf("5. Ver historico de apostas\n");
-        printf("6. Sair\n");
+        printf("6. Adicionar saldo\n");
+        printf("7. Sair\n");
         printf("Escolha uma opcao: ");
         scanf("%d", &opcao);
 
@@ -408,6 +472,9 @@ int main(void) {
                 verificarSaldo();
                 break;
             case 6:
+                adicionarSaldo(apostadores);
+                break;
+            case 7:
                 continua = 0;
                 break;
             default:
