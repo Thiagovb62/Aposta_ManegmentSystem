@@ -144,7 +144,7 @@ void cadastrarUsuario(apostador apostadores[]) {
 
     printf("Digite a sua idade: \n");       //informar idade, só pode acima de 18
     scanf("%d", &idade);
-    if (idade > 18) {
+    if (idade >= 18) {
         apostadores[apostador_atual].idade = idade;
     } else {
         printf("O sistema detectou que voce eh de menor, portanto proibimos seu cadastro!\n");
@@ -200,7 +200,7 @@ void jogarJogoDoBixo(apostador apostadores[], jogo jogos[]) {
         printf("Numero invalido. Tente novamente.\n");
         return;
     }
-    printf("Digite quanto voce quer apostar: ");    //escolher valor da aposta
+    printf("Digite quanto voce quer apostar (minimo %.2f): ", jogos[0].valor_minimo_aposta);    //escolher valor da aposta
     float valorApostado;
     scanf("%f", &valorApostado);
     if (valorApostado < jogos[0].valor_minimo_aposta) { //verificar se o valor é maior ou igual ao minimo do jogo
@@ -261,7 +261,7 @@ void jogo_das_cores(apostador apostadores[], jogo jogos[]) {
     }
     printf("Bem vindo ao jogo das cores %s\n", apostadores[apostador_atual - 1].nome);
 
-    printf("Digite quanto voce quer apostar: ");    //escolher valor da aposta
+    printf("Digite quanto voce quer apostar (minimo %.2f): ", jogos[1].valor_minimo_aposta);    //escolher valor da aposta
     float valorApostado;
     scanf("%f", &valorApostado);
     if (valorApostado < jogos[1].valor_minimo_aposta) { //verificar se o valor é maior ou igual ao minimo do jogo
@@ -405,7 +405,7 @@ void verificarSaldo() {
         }
         fclose(file);
     }
-    printf("Pressione Enter para voltar ao menu...");
+    printf("Pressione tecla Enter para voltar ao menu...");
     getchar(); // Espera o usuário pressionar Enter
     getchar(); // Captura o Enter que ficou no buffer do scanf
 }
@@ -532,7 +532,6 @@ void historicoApostas() {
     }
 
     fclose(file);
-    printf("\nPressione Enter para voltar ao menu...");
+    printf("\nPressione tecla Enter para voltar ao menu...");
     getchar(); // Espera o usuário pressionar Enter
-    getchar(); // Captura o Enter que ficou no buffer do scanf
 }
